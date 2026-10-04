@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Municipality Map</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Finnish municipalities map</h1>
+    <p class="lead">Upload CSV files with two columns, <em>location</em> and <em>number</em>. Each file gets its own color; a bigger number gives a darker shade.</p>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <label class="drop" id="drop">
+        <input type="file" id="file-input" accept=".csv,.txt,text/csv" multiple>
+        <span><strong>Choose CSV files</strong> or drop them here</span>
+      </label>
+
+      <div class="options">
+        <fieldset>
+          <legend>Shades per file</legend>
+          <label><input type="radio" name="classes" value="3"> 3</label>
+          <label><input type="radio" name="classes" value="5" checked> 5</label>
+        </fieldset>
+        <fieldset>
+          <legend>Grouping</legend>
+          <label><input type="radio" name="method" value="quantile" checked> Equal counts</label>
+          <label><input type="radio" name="method" value="equal"> Equal ranges</label>
+        </fieldset>
+        <fieldset>
+          <legend>Options</legend>
+          <label><input type="checkbox" id="web-check" checked> Check unknown names online</label>
+          <label><input type="checkbox" id="show-labels" checked> Show names on map</label>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="panel" id="files-panel" hidden>
+      <h2>Files</h2>
+      <p class="hint">The file higher in the list wins where visible files overlap.</p>
+      <ul id="file-list" class="file-list"></ul>
+      <p id="web-status" class="web-status" hidden></p>
+    </section>
+
+    <section class="panel" id="report-panel" hidden>
+      <details id="report">
+        <summary>Matching report <span id="report-count"></span></summary>
+        <div id="report-body"></div>
+      </details>
+    </section>
+
+    <section class="map-section">
+      <div class="map-tools">
+        <button type="button" id="zoom-in" title="Zoom in">+</button>
+        <button type="button" id="zoom-out" title="Zoom out">&minus;</button>
+        <button type="button" id="zoom-reset" title="Show whole map">Reset</button>
+        <span class="hint">Drag to move when zoomed. Double-click to zoom in.</span>
+      </div>
+      <div id="map" class="map"></div>
+    </section>
+  </main>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+
+  <footer>
+    Municipality boundaries and names: <a href="https://stat.fi/en/luokitukset/kunta/">Statistics Finland</a>, CC BY 4.0.
+    Merger history: <a href="https://fi.wikipedia.org/wiki/Kuntaliitos_Suomessa">Wikipedia</a>.
+    Online name check: <a href="https://www.wikidata.org/">Wikidata</a>.
+  </footer>
+
+  <script src="municipalities.js"></script>
+  <script src="map.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
