@@ -539,12 +539,14 @@
     setupInteraction();
   }
 
+  // Color of a municipality: the first visible file (in list order) that has it.
+  function fillFor(code) {
+    const file = state.files.find((f) => f.visible && f.values.has(code));
+    return file ? shade(file, file.classOf.get(code)) : '';
+  }
+
   function paintMap() {
-    const visible = state.files.filter((f) => f.visible);
-    for (const [code, p] of pathByCode) {
-      const file = visible.find((f) => f.values.has(code));
-      p.style.fill = file ? shade(file, file.classOf.get(code)) : '';
-    }
+    for (const [code, p] of pathByCode) p.style.fill = fillFor(code);
   }
 
   function setView(v) {
@@ -612,6 +614,108 @@
     document.getElementById('zoom-in').addEventListener('click', () => zoom(2));
     document.getElementById('zoom-out').addEventListener('click', () => zoom(0.5));
     document.getElementById('zoom-reset').addEventListener('click', () => setView({ x: 0, y: 0, w: window.MAP_DATA.width }));
+    document.getElementById('download-png').addEventListener('click', downloadPng);
+    document.getElementById('download-svg').addEventListener('click', downloadSvg);
+  }
+
+  // ======================================================================
+  // Image download: the whole map as currently colored, with a legend band
+  // ======================================================================
+
+  const EXPORT_PNG_WIDTH = 2000;
+
+  function xml(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  // Builds a standalone SVG (styles inlined, since the page's CSS doesn't travel with the file).
+  function buildExportSvg() {
+    const data = window.MAP_DATA;
+    const W = data.width, H = data.height;
+    const pad = 12;
+    const parts = [];
+
+    parts.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="#e3f0fa"/>`);
+    parts.push('<g stroke="#8a8f98" stroke-width="0.25" stroke-linejoin="round" fill-rule="evenodd">');
+    for (const [code, p] of pathByCode) {
+      parts.push(`<path d="${p.getAttribute('d')}" fill="${fillFor(code) || '#ffffff'}"/>`);
+    }
+    parts.push('</g>');
+
+    if (!mapEl.classList.contains('no-labels')) {
+      parts.push('<g font-family="Arial, sans-serif" fill="#222" stroke="#ffffff" stroke-opacity="0.75" stroke-width="0.5" paint-order="stroke" text-anchor="middle" dominant-baseline="central">');
+      for (const t of svg.querySelectorAll('.labels text')) {
+        parts.push(`<text x="${t.getAttribute('x')}" y="${t.getAttribute('y')}" font-size="${t.getAttribute('font-size')}">${xml(t.textContent)}</text>`);
+      }
+      parts.push('</g>');
+    }
+
+    // Legend: one block per visible file, in priority order.
+    let y = H + pad;
+    const legend = [];
+    const files = state.files.filter((f) => f.visible && f.values.size);
+    for (const f of files) {
+      legend.push(`<text x="${pad}" y="${y + 8}" font-size="9" font-weight="bold">${xml(f.name)}</text>`);
+      y += 13;
+      const stepW = Math.min(110, (W - 2 * pad) / f.ranges.length);
+      f.ranges.forEach((r, k) => {
+        const x = pad + k * stepW;
+        const label = r ? (r.min === r.max ? fmt(r.min) : `${fmt(r.min)} – ${fmt(r.max)}`) : '–';
+        legend.push(`<rect x="${x}" y="${y}" width="${stepW - 2}" height="9" fill="${shade(f, k)}" stroke="#00000022" stroke-width="0.3"/>`);
+        legend.push(`<text x="${x}" y="${y + 17}" font-size="7" fill="#5d6676">${xml(label)}</text>`);
+      });
+      y += 30;
+    }
+    const credit = `Municipalities ${window.MUNICIPALITY_YEAR}: Statistics Finland, CC BY 4.0`;
+    legend.push(`<text x="${pad}" y="${y + 6}" font-size="6" fill="#5d6676">${xml(credit)}</text>`);
+    y += 6 + pad;
+
+    const totalH = Math.ceil(y);
+    return {
+      width: W,
+      height: totalH,
+      text: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${totalH}" width="${W * 2}" height="${totalH * 2}">` +
+        `<rect x="0" y="0" width="${W}" height="${totalH}" fill="#ffffff"/>` +
+        parts.join('') +
+        `<g font-family="Arial, sans-serif" fill="#1d2330">${legend.join('')}</g></svg>`,
+    };
+  }
+
+  function saveBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function downloadSvg() {
+    const { text } = buildExportSvg();
+    saveBlob(new Blob([text], { type: 'image/svg+xml' }), 'municipality-map.svg');
+  }
+
+  function downloadPng() {
+    const { width, height, text } = buildExportSvg();
+    const outW = EXPORT_PNG_WIDTH;
+    const outH = Math.round(outW * height / width);
+    const url = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      canvas.getContext('2d').drawImage(img, 0, 0, outW, outH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => saveBlob(blob, 'municipality-map.png'), 'image/png');
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      alert('Could not create the PNG image. Try "Download SVG" instead.');
+    };
+    img.src = url;
   }
 
   let tooltipCode = null;

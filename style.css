@@ -147,6 +147,8 @@ fieldset label { margin-right: 12px; white-space: nowrap; }
   font-size: 1rem;
 }
 .map-tools .hint { margin: 0 0 0 8px; }
+.map-tools .spacer { flex: 1; }
+.map-tools #download-png, .map-tools #download-svg { font-size: 0.85rem; padding: 0 10px; }
 .map {
   max-width: 1000px;
   margin: 0 auto;
