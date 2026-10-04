@@ -539,9 +539,18 @@
     setupInteraction();
   }
 
-  // Color of a municipality: the first visible file (in list order) that has it.
+  // The visible file whose number for this municipality is highest; on a tie, the one higher in the list.
+  function winnerFor(code) {
+    let best = null;
+    for (const f of state.files) {
+      if (!f.visible || !f.values.has(code)) continue;
+      if (!best || f.values.get(code).value > best.values.get(code).value) best = f;
+    }
+    return best;
+  }
+
   function fillFor(code) {
-    const file = state.files.find((f) => f.visible && f.values.has(code));
+    const file = winnerFor(code);
     return file ? shade(file, file.classOf.get(code)) : '';
   }
 
@@ -729,12 +738,12 @@
       const region = window.REGIONS[m.region];
       const fiName = m.fi.split(/\s-\s/)[0];
       const names = m.sv && m.sv !== fiName ? `${fiName} / ${m.sv}` : fiName;
-      const winner = state.files.find((f) => f.visible && f.values.has(code));
+      const winner = winnerFor(code);
       const rows = state.files.filter((f) => f.values.has(code)).map((f) => {
         const v = f.values.get(code);
         let note = '';
         if (!f.visible) note = ' (hidden)';
-        else if (f !== winner) note = ' (covered)';
+        else if (f !== winner) note = ' (lower number)';
         return `<div class="tt-row${f === winner ? '' : ' dim'}">
           <span class="sw" style="background:${shade(f, f.classOf.get(code))}"></span>
           <span class="tt-file">${esc(f.name)}${note}</span>

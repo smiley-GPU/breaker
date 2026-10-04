@@ -11,4 +11,4 @@ Find the Municipalities_of_Finland_labelled_-_FI.svg and save it to this folder.
 Have the Municipalities_of_Finland_labelled_-_FI.svg as a map in the bottom of the webpage, and show the colors there. Also show the number if cursor is placed on top of the municipality.
 Make the map max 1000px wide so it's fits to web page.
 If you can't find the location, make a simple web check where it should belong. If you can't find right place, then skip this row from file.
-when files overlap: Show or hide files with checkboxes; when two visible files overlap, the one higher in the list wins. 
+when files overlap: Show or hide files with checkboxes; when two visible files overlap, the higher number wins and its color is shown (equal numbers: the one higher in the list wins). 

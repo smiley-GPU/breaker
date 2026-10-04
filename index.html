@@ -40,7 +40,7 @@
 
     <section class="panel" id="files-panel" hidden>
       <h2>Files</h2>
-      <p class="hint">The file higher in the list wins where visible files overlap.</p>
+      <p class="hint">Where visible files overlap, the file with the higher number gets the color. On equal numbers, the file higher in the list wins.</p>
       <ul id="file-list" class="file-list"></ul>
       <p id="web-status" class="web-status" hidden></p>
     </section>
@@ -58,11 +58,13 @@
         <button type="button" id="zoom-out" title="Zoom out">&minus;</button>
         <button type="button" id="zoom-reset" title="Show whole map">Reset</button>
         <span class="hint">Drag to move when zoomed. Double-click to zoom in.</span>
-        <span class="spacer"></span>
+      </div>
+      <div id="map" class="map"></div>
+      <div class="map-downloads">
+        <span class="hint">Download the whole map with a legend:</span>
         <button type="button" id="download-png" title="Save the whole map with legend as a PNG image">Download PNG</button>
         <button type="button" id="download-svg" title="Save the whole map with legend as an SVG image">Download SVG</button>
       </div>
-      <div id="map" class="map"></div>
     </section>
   </main>
 
